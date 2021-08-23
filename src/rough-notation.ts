@@ -68,6 +68,16 @@ class RoughAnnotationImpl implements RoughAnnotation {
     }
   }
 
+  get roughness() {
+    return this._config.roughness
+  }
+  set roughness(value) {
+    if (this._config.roughness !== value) {
+      this._config.roughness = value
+      this.refresh()
+    }
+  }
+
   private attach() {
     if (this._state === 'unattached' && this._e.parentElement) {
       const svg = (this._svg = document.createElementNS(SVG_NS, 'svg'))

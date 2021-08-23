@@ -11,10 +11,14 @@ import { Point } from 'roughjs/bin/geometry'
 
 type RoughOptionsType = 'highlight' | 'single' | 'double'
 
-function getOptions(type: RoughOptionsType, seed: number): ResolvedOptions {
+function getOptions(
+  type: RoughOptionsType,
+  seed: number,
+  roughness?: number
+): ResolvedOptions {
   return {
     maxRandomnessOffset: 2,
-    roughness: type === 'highlight' ? 3 : 1.5,
+    roughness: roughness || type === 'highlight' ? 3 : 1.5,
     bowing: 1,
     stroke: '#000',
     strokeWidth: 1.5,
@@ -71,7 +75,7 @@ export function renderAnnotation(
   const padding = parsePadding(config)
   const iterations = config.iterations || 2
   const rtl = config.rtl ? 1 : 0
-  const o = getOptions('single', config.seed)
+  const o = getOptions('single', config.seed, config.roughness)
 
   switch (config.type) {
     case 'underline': {
@@ -170,7 +174,7 @@ export function renderAnnotation(
       break
     }
     case 'circle': {
-      const doubleO = getOptions('double', config.seed)
+      const doubleO = getOptions('double', config.seed, config.roughness)
       const width = rect.w + (padding[1] + padding[3])
       const height = rect.h + (padding[0] + padding[2])
       const x = rect.x - padding[3] + width / 2
@@ -186,7 +190,7 @@ export function renderAnnotation(
       break
     }
     case 'highlight': {
-      const o = getOptions('highlight', config.seed)
+      const o = getOptions('highlight', config.seed, config.roughness)
       strokeWidth = rect.h * 0.95
       const y = rect.y + rect.h / 2
       for (let i = rtl; i < iterations + rtl; i++) {
