@@ -2,11 +2,9 @@ import {
   Rect,
   RoughAnnotationConfig,
   RoughAnnotation,
-  SVG_NS,
-  DEFAULT_ANIMATION_DURATION
+  SVG_NS
 } from './model.js'
-import { renderAnnotation } from './render.js'
-import { ensureKeyframes } from './keyframes.js'
+import { changeDrawnPercentage, renderAnnotation } from './render.js'
 
 type AnnotationState = 'unattached' | 'not-showing' | 'showing'
 
@@ -21,20 +19,6 @@ class RoughAnnotationImpl implements RoughAnnotation {
     this._e = e
     this._config = JSON.parse(JSON.stringify(config))
     this.attach()
-  }
-
-  get animate() {
-    return this._config.animate
-  }
-  set animate(value) {
-    this._config.animate = value
-  }
-
-  get animationDuration() {
-    return this._config.animationDuration
-  }
-  set animationDuration(value) {
-    this._config.animationDuration = value
   }
 
   get iterations() {
@@ -86,7 +70,6 @@ class RoughAnnotationImpl implements RoughAnnotation {
 
   private attach() {
     if (this._state === 'unattached' && this._e.parentElement) {
-      ensureKeyframes()
       const svg = (this._svg = document.createElementNS(SVG_NS, 'svg'))
       svg.setAttribute('class', 'rough-annotation')
       const style = svg.style
@@ -128,6 +111,11 @@ class RoughAnnotationImpl implements RoughAnnotation {
     }
   }
 
+  setPercentageDrawn(percentage: number): void {
+    if (!this._svg) return
+    changeDrawnPercentage(this._svg, percentage)
+  }
+
   show(): void {
     switch (this._state) {
       case 'unattached':
@@ -135,13 +123,13 @@ class RoughAnnotationImpl implements RoughAnnotation {
       case 'showing':
         this.hide()
         if (this._svg) {
-          this.render(this._svg, true)
+          this.render(this._svg)
         }
         break
       case 'not-showing':
         this.attach()
         if (this._svg) {
-          this.render(this._svg, false)
+          this.render(this._svg)
         }
         break
     }
@@ -164,20 +152,11 @@ class RoughAnnotationImpl implements RoughAnnotation {
     this._state = 'unattached'
   }
 
-  private render(svg: SVGSVGElement, ensureNoAnimation: boolean) {
+  private render(svg: SVGSVGElement) {
     let config = this._config
-    if (ensureNoAnimation) {
-      config = JSON.parse(JSON.stringify(this._config))
-      config.animate = false
-    }
     const rects = this.rects()
-    let totalWidth = 0
-    rects.forEach(rect => (totalWidth += rect.w))
-    const totalDuration = config.animationDuration || DEFAULT_ANIMATION_DURATION
     for (let i = 0; i < rects.length; i++) {
-      const rect = rects[i]
-      const ad = totalDuration * (rect.w / totalWidth)
-      renderAnnotation(svg, rects[i], config, ad)
+      renderAnnotation(svg, rects[i], config)
     }
     this._state = 'showing'
   }

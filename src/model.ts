@@ -1,7 +1,5 @@
 export const SVG_NS = 'http://www.w3.org/2000/svg'
 
-export const DEFAULT_ANIMATION_DURATION = 800
-
 export interface Rect {
   x: number
   y: number
@@ -29,8 +27,6 @@ export interface RoughAnnotationConfig extends RoughAnnotationConfigBase {
 }
 
 export interface RoughAnnotationConfigBase {
-  animate?: boolean // defaults to true
-  animationDuration?: number // defaulst to 1000ms
   color?: string // defaults to currentColor
   strokeWidth?: number // default based on type
   padding?: RoughPadding // defaults to 5px

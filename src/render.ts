@@ -64,13 +64,11 @@ function parsePadding(config: RoughAnnotationConfig): FullPadding {
 export function renderAnnotation(
   svg: SVGSVGElement,
   rect: Rect,
-  config: RoughAnnotationConfig,
-  animationDuration: number
+  config: RoughAnnotationConfig
 ) {
   const opList: OpSet[] = []
   let strokeWidth = config.strokeWidth || 2
   const padding = parsePadding(config)
-  const animate = config.animate === undefined ? true : !!config.animate
   const iterations = config.iterations || 2
   const rtl = config.rtl ? 1 : 0
   const o = getOptions('single', config.seed)
@@ -204,9 +202,7 @@ export function renderAnnotation(
 
   if (opList.length) {
     const pathStrings = opsToPath(opList)
-    const lengths: number[] = []
     const pathElements: SVGPathElement[] = []
-    let totalLength = 0
     const setAttr = (p: SVGPathElement, an: string, av: string) =>
       p.setAttribute(an, av)
 
@@ -216,28 +212,43 @@ export function renderAnnotation(
       setAttr(path, 'fill', 'none')
       setAttr(path, 'stroke', config.color || 'currentColor')
       setAttr(path, 'stroke-width', `${strokeWidth}`)
-      if (animate) {
-        const length = path.getTotalLength()
-        lengths.push(length)
-        totalLength += length
-      }
+      const length = path.getTotalLength()
+      path.style.strokeDashoffset = `${length}`
+      path.style.strokeDasharray = `${length}`
       svg.appendChild(path)
       pathElements.push(path)
     }
+  }
+}
 
-    if (animate) {
-      for (let i = 0; i < pathElements.length; i++) {
-        const path = pathElements[i]
-        const length = lengths[i]
-        const duration = totalLength
-          ? animationDuration * (length / totalLength)
-          : 0
-        const style = path.style
-        style.strokeDashoffset = `${length}`
-        style.strokeDasharray = `${length}`
-        style.animation = `rough-notation-dash ${duration}ms ease-out forwards`
-      }
+export function changeDrawnPercentage(
+  svg: SVGSVGElement,
+  percentage: number
+): void {
+  const pathElements: SVGPathElement[] = Array.from(
+    svg.querySelectorAll('path')
+  )
+  const perStepPercentage = 1 / pathElements.length
+
+  for (let i = 0; i < pathElements.length; i++) {
+    const path = pathElements[i]
+    const length = path.getTotalLength()
+    const style = path.style
+    const stepsCompleted = percentage / perStepPercentage
+    const currentStep = Math.floor(stepsCompleted)
+
+    if (currentStep < i) {
+      style.strokeDashoffset = `${length}`
+      continue
     }
+
+    if (currentStep > i) {
+      style.strokeDashoffset = '0'
+      continue
+    }
+
+    const stepPercentage = stepsCompleted - currentStep
+    style.strokeDashoffset = `${(1 - stepPercentage) * length}`
   }
 }
 
