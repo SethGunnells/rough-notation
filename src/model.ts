@@ -22,6 +22,7 @@ export type RoughPadding = number | [number, number] | FullPadding
 export type BracketType = 'left' | 'right' | 'top' | 'bottom'
 
 export interface RoughAnnotationConfig extends RoughAnnotationConfigBase {
+  seed: number
   type: RoughAnnotationType
   multiline?: boolean
   rtl?: boolean

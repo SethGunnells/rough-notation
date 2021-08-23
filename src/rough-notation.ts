@@ -7,14 +7,12 @@ import {
 } from './model.js'
 import { renderAnnotation } from './render.js'
 import { ensureKeyframes } from './keyframes.js'
-import { randomSeed } from 'roughjs/bin/math'
 
 type AnnotationState = 'unattached' | 'not-showing' | 'showing'
 
 class RoughAnnotationImpl implements RoughAnnotation {
   private _state: AnnotationState = 'unattached'
   private _config: RoughAnnotationConfig
-  private _seed = randomSeed()
 
   private _e: HTMLElement
   private _svg?: SVGSVGElement
@@ -52,6 +50,16 @@ class RoughAnnotationImpl implements RoughAnnotation {
   set color(value) {
     if (this._config.color !== value) {
       this._config.color = value
+      this.refresh()
+    }
+  }
+
+  get seed() {
+    return this._config.seed
+  }
+  set seed(value) {
+    if (this._config.seed !== value) {
+      this._config.seed = value
       this.refresh()
     }
   }
@@ -169,7 +177,7 @@ class RoughAnnotationImpl implements RoughAnnotation {
     for (let i = 0; i < rects.length; i++) {
       const rect = rects[i]
       const ad = totalDuration * (rect.w / totalWidth)
-      renderAnnotation(svg, rects[i], config, ad, this._seed)
+      renderAnnotation(svg, rects[i], config, ad)
     }
     this._state = 'showing'
   }
