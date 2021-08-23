@@ -8,11 +8,14 @@ import { changeDrawnPercentage, renderAnnotation } from './render.js'
 
 type AnnotationState = 'unattached' | 'not-showing' | 'showing'
 
+const max = (a: number, b: number) => (a > b ? a : b)
+const min = (a: number, b: number) => (a < b ? a : b)
+
 class RoughAnnotationImpl implements RoughAnnotation {
   private _state: AnnotationState = 'unattached'
   private _config: RoughAnnotationConfig
 
-  private _e: HTMLElement
+  private _e: HTMLElement | HTMLElement[]
   private _svg?: SVGSVGElement
 
   constructor(e: HTMLElement, config: RoughAnnotationConfig) {
@@ -78,31 +81,63 @@ class RoughAnnotationImpl implements RoughAnnotation {
     }
   }
 
-  private attach() {
-    if (this._state === 'unattached' && this._e.parentElement) {
-      const svg = (this._svg = document.createElementNS(SVG_NS, 'svg'))
-      svg.setAttribute('class', 'rough-annotation')
-      const style = svg.style
-      style.position = 'absolute'
-      style.top = '0'
-      style.left = '0'
-      style.overflow = 'visible'
-      style.pointerEvents = 'none'
-      style.width = '100px'
-      style.height = '100px'
-      const prepend = this._config.type === 'highlight'
-      this._e.insertAdjacentElement(prepend ? 'beforebegin' : 'afterend', svg)
-      this._state = 'not-showing'
+  private getSingleElement() {
+    return Array.isArray(this._e) ? this._e[0] : this._e
+  }
 
-      // ensure e is positioned
-      if (prepend) {
-        const computedPos = window.getComputedStyle(this._e).position
-        const unpositioned = !computedPos || computedPos === 'static'
-        if (unpositioned) {
-          this._e.style.position = 'relative'
-        }
-      }
+  private getBoundsForElements() {
+    if (!Array.isArray(this._e)) return this._e.getBoundingClientRect()
+    const pos = this._e.reduce(
+      (bounds, e) => {
+        const rect = e.getBoundingClientRect()
+        bounds.left = min(bounds.left, rect.left)
+        bounds.top = min(bounds.top, rect.top)
+        bounds.right = max(bounds.right, rect.right)
+        bounds.bottom = max(bounds.bottom, rect.bottom)
+        return bounds
+      },
+      { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity }
+    )
+    return {
+      left: pos.left,
+      x: pos.left,
+      top: pos.top,
+      y: pos.top,
+      width: pos.right - pos.left,
+      height: pos.bottom - pos.top
     }
+  }
+
+  private attach() {
+    if (this._state !== 'unattached' || !this.getSingleElement().parentElement)
+      return
+
+    const svg = (this._svg = document.createElementNS(SVG_NS, 'svg'))
+    svg.setAttribute('class', 'rough-annotation')
+    const style = svg.style
+    style.position = 'absolute'
+    style.top = '0'
+    style.left = '0'
+    style.overflow = 'visible'
+    style.pointerEvents = 'none'
+    style.width = '100px'
+    style.height = '100px'
+    const prepend = this._config.type === 'highlight'
+    this.getSingleElement().insertAdjacentElement(
+      prepend ? 'beforebegin' : 'afterend',
+      svg
+    )
+    this._state = 'not-showing'
+
+    // ensure e is positioned
+    if (!prepend) return
+    const es = Array.isArray(this._e) ? this._e : [this._e]
+    es.forEach(e => {
+      const computedPos = window.getComputedStyle(e).position
+      const unpositioned = !computedPos || computedPos === 'static'
+      if (!unpositioned) return
+      e.style.position = 'relative'
+    })
   }
 
   isShowing(): boolean {
@@ -175,20 +210,20 @@ class RoughAnnotationImpl implements RoughAnnotation {
     const ret: Rect[] = []
     if (this._svg) {
       if (this._config.multiline) {
-        const elementRects = this._e.getClientRects()
+        const elementRects = this.getSingleElement().getClientRects()
         for (let i = 0; i < elementRects.length; i++) {
           ret.push(this.svgRect(this._svg, elementRects[i]))
         }
       } else {
-        ret.push(this.svgRect(this._svg, this._e.getBoundingClientRect()))
+        ret.push(this.svgRect(this._svg))
       }
     }
     return ret
   }
 
-  private svgRect(svg: SVGSVGElement, bounds: DOMRect | DOMRectReadOnly): Rect {
+  private svgRect(svg: SVGSVGElement, rect?: DOMRect): Rect {
     const rect1 = svg.getBoundingClientRect()
-    const rect2 = bounds
+    const rect2 = rect ? rect : this.getBoundsForElements()
     return {
       x: (rect2.x || rect2.left) - (rect1.x || rect1.left),
       y: (rect2.y || rect2.top) - (rect1.y || rect1.top),
