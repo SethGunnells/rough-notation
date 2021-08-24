@@ -18,7 +18,7 @@ class RoughAnnotationImpl implements RoughAnnotation {
   private _e: HTMLElement | HTMLElement[]
   private _svg?: SVGSVGElement
 
-  constructor(e: HTMLElement, config: RoughAnnotationConfig) {
+  constructor(e: HTMLElement | HTMLElement[], config: RoughAnnotationConfig) {
     this._e = e
     this._config = JSON.parse(JSON.stringify(config))
     this.attach()
@@ -234,7 +234,7 @@ class RoughAnnotationImpl implements RoughAnnotation {
 }
 
 export function annotate(
-  element: HTMLElement,
+  element: HTMLElement | HTMLElement[],
   config: RoughAnnotationConfig
 ): RoughAnnotation {
   return new RoughAnnotationImpl(element, config)
