@@ -1,7 +1,7 @@
 {
-  "name": "rough-notation",
-  "version": "0.5.1",
-  "description": "Create and animate hand-drawn annotations on a web page",
+  "name": "@sethgunnells/rough-notation",
+  "version": "0.1.0",
+  "description": "Create and animate hand-drawn annotations using JavaScript",
   "main": "lib/rough-notation.cjs.js",
   "module": "lib/rough-notation.esm.js",
   "types": "lib/rough-notation.d.ts",
@@ -12,19 +12,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pshihn/rough-notation.git"
+    "url": "git+https://github.com/SethGunnells/rough-notation.git"
   },
   "keywords": [
     "annotate",
     "rough",
     "sketchy"
   ],
-  "author": "Preet Shihn",
+  "author": "Seth Gunnells",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/pshihn/rough-notation/issues"
+    "url": "https://github.com/SethGunnells/rough-notation/issues"
   },
-  "homepage": "https://github.com/pshihn/rough-notation#readme",
+  "homepage": "https://github.com/SethGunnells/rough-notation#readme",
   "devDependencies": {
     "rollup": "^2.32.1",
     "rollup-plugin-node-resolve": "^5.2.0",
