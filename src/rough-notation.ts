@@ -20,7 +20,7 @@ class RoughAnnotationImpl implements RoughAnnotation {
 
   constructor(e: HTMLElement | HTMLElement[], config: RoughAnnotationConfig) {
     this._e = e
-    this._config = JSON.parse(JSON.stringify(config))
+    this._config = config
     this.attach()
   }
 
@@ -123,10 +123,16 @@ class RoughAnnotationImpl implements RoughAnnotation {
     style.width = '100px'
     style.height = '100px'
     const prepend = this._config.type === 'highlight'
-    this.getSingleElement().insertAdjacentElement(
-      prepend ? 'beforebegin' : 'afterend',
-      svg
-    )
+    const host = this._config.host
+    if (host) {
+      if (prepend) host.prepend(svg)
+      else host.append(svg)
+    } else {
+      this.getSingleElement().insertAdjacentElement(
+        prepend ? 'beforebegin' : 'afterend',
+        svg
+      )
+    }
     this._state = 'not-showing'
 
     // ensure e is positioned
